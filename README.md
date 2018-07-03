@@ -39,7 +39,7 @@ msg "status\":\(?<status>[^\]+).*\"statusMessage\":\"(?<statusMessage>[^\"]+)"
 eval finalStatus = case(statusCd=="200","SUCCESS", statusCd == "433", "PARTIAL_SUCCESS") 
 ```
 ? - matches zero or more occurences
-[^\"] matches any pattern not of this specified pattern, here matches any string not having \" quote.
+[^\"] matches any pattern not of this specified pattern, here matches any string not haFruitg \" quote.
 
 ```stats count(fruits) AS TotalFruits,count(Varieties) AS TotalVarieties by Name, color```
 
@@ -53,7 +53,7 @@ Apple     green	        20              5
 sort  -Fruit Name, -_time 
 ```
 
-**********TRIGGER ANOTHER PANEL SEARCH BASED ON INPUT SEARCH*********
+#TRIGGER ANOTHER PANEL SEARCH BASED ON INPUT SEARCH
 Click on Edit dashboard, go to panel
 Click on vertical dots for more actions, click on edit drilldown
 In Drilldown editor, select Manage tokens on this dashboard
@@ -68,31 +68,31 @@ set variableName $row.variableInSearch$
 ```
 index=my_org 	 cf_space_name=my_space	
 | search "CustomLogMessage" AND $Name|s$ AND $Color`|s$
-| rex field=msg "vinList\":\[(?<vin_list>[^\]]+).*requestType\":\"(?<requestType>[^\"]+).*traceId\":\"(?<traceId>[^\"]+).*srcAppCd\":(?<srcAppCd>[^,]+).*createUser\":\"(?<createUser>[^\"]+).*functionDetailsList\":\[(?<functionDetailsList>[^\]]+)" 
+| rex field=msg "FruitList\":\[(?<Fruit_list>[^\]]+).*requestType\":\"(?<requestType>[^\"]+).*requestId\":\"(?<requestId>[^\"]+).*srcAppCd\":(?<srcAppCd>[^,]+).*createUser\":\"(?<createUser>[^\"]+).*varietiesDetailsList\":\[(?<varietiesDetailsList>[^\]]+)" 
 ```
 ```
 index=my_org 	 cf_space_name=my_space	
-| search "ReceivedDeploymentRequest" AND $sTraceId_Search|s$ AND $sTraceId|s$
-| rex field=msg "vinList\":\[(?<vin_list>[^\]]+).*requestType\":\"(?<requestType>[^\"]+).*traceId\":\"(?<traceId>[^\"]+).*srcAppCd\":(?<srcAppCd>[^,]+).*createUser\":\"(?<createUser>[^\"]+).*functionDetailsList\":\[(?<functionDetailsList>[^\]]+)" 
-| eval vins=split(vin_list,",")
-| mvexpand vins 
-| eval vinDtl=replace(vins,"\"","")  
-| eval functionLists=split(functionDetailsList,"},") 
-| mvexpand functionLists 
-| rex field=functionLists "functionId\":\"(?<functionId>[^\"]+).*.*functionExpiryDate\":\"(?<functionExpiryDate>[^\"]+)"
-| dedup traceId,vinDtl,functionId  
-| rename vinDtl AS Vin, functionId AS "Function ID", functionExpiryDate AS "Function Expiration Date"
-| table Vin,"Function ID","Function Expiration Date"
-| rex field=msg "vinList\":\[(?<vin_list>[^\]]+).*requestType\":\"(?<requestType>[^\"]+).*traceId\":\"(?<traceId>[^\"]+).*srcAppCd\":(?<srcAppCd>[^,]+).*createUser\":\"(?<createUser>[^\"]+).*functionDetailsList\":\[(?<functionDetailsList>[^\]]+)" 
-| eval vins=split(vin_list,",")
-| mvexpand vins 
-| eval vinDtl=replace(vins,"\"","")  
-| eval functionLists=split(functionDetailsList,"},") 
-| mvexpand functionLists 
-| rex field=functionLists "functionId\":\"(?<functionId>[^\"]+).*.*functionExpiryDate\":\"(?<functionExpiryDate>[^\"]+)"
-| dedup traceId,vinDtl,functionId  
-| rename vinDtl AS Vin, functionId AS "Function ID", functionExpiryDate AS "Function Expiration Date"
-| table Vin,"Function ID","Function Expiration Date"
+| search "ReceivedmentRequest" AND $srequestId_Search|s$ AND $srequestId|s$
+| rex field=msg "FruitList\":\[(?<Fruit_list>[^\]]+).*requestType\":\"(?<requestType>[^\"]+).*requestId\":\"(?<requestId>[^\"]+).*srcAppCd\":(?<srcAppCd>[^,]+).*createUser\":\"(?<createUser>[^\"]+).*varietiesDetailsList\":\[(?<varietiesDetailsList>[^\]]+)" 
+| eval Fruits=split(Fruit_list,",")
+| mvexpand Fruits 
+| eval FruitDtl=replace(Fruits,"\"","")  
+| eval TypeLists=split(varietiesDetailsList,"},") 
+| mvexpand TypeLists 
+| rex field=TypeLists "typeId\":\"(?<typeId>[^\"]+).*.*expiry\":\"(?<expiry>[^\"]+)"
+| dedup requestId,FruitDtl,typeId  
+| rename FruitDtl AS Fruit, typeId AS "Type ID", expiry AS "Type Expiration Date"
+| table Fruit,"Type ID","Type Expiration Date"
+| rex field=msg "FruitList\":\[(?<Fruit_list>[^\]]+).*requestType\":\"(?<requestType>[^\"]+).*requestId\":\"(?<requestId>[^\"]+).*srcAppCd\":(?<srcAppCd>[^,]+).*createUser\":\"(?<createUser>[^\"]+).*varietiesDetailsList\":\[(?<varietiesDetailsList>[^\]]+)" 
+| eval Fruits=split(Fruit_list,",")
+| mvexpand Fruits 
+| eval FruitDtl=replace(Fruits,"\"","")  
+| eval TypeLists=split(varietiesDetailsList,"},") 
+| mvexpand TypeLists 
+| rex field=TypeLists "typeId\":\"(?<typeId>[^\"]+).*.*expiry\":\"(?<expiry>[^\"]+)"
+| dedup requestId,FruitDtl,typeId  
+| rename FruitDtl AS Fruit, typeId AS "Type ID", expiry AS "Type Expiration Date"
+| table Fruit,"Type ID","Type Expiration Date"
 ```
 
 ##### SEARCH TYPES
@@ -106,34 +106,34 @@ index=my_org 	 cf_space_name=my_space
 ```
 | multisearch
 
-[search index=my_org cf_space_name=my_space ("VsdnUpgResponseHandler" 
-         OR "VsdnIOTResponseHandler" 
-         OR "VsdnCommandResponseHandler")
-         AND "CvdaLog" AND $deployBatchId|s$
-| rex field=msg "eventVinRecord\":\"(?<Vin>[^\"]+).*\"eventVsdnBatchId\":\"$deployBatchId|s$\".*\"eventStatusCd\":\"(?<StatusCd>[^\"]+).*\"eventStatusMsg\":\"(?<statusMsg>[^\"]+).*\"eventType\":\"(?<eventType>[^\"]+).*\"eventTransactionHeaderId\":\"(?<TransactionHeaderId>[^\"]+)"
-| fields eventType,BatchId,statusMsg
+[search index=my_org cf_space_name=my_space ("message1" 
+         OR "message2" 
+         OR "message3")
+         AND "CustomLogMessage" AND $BunchId|s$
+| rex field=msg "eventFruitRecord\":\"(?<Fruit>[^\"]+).*\"eventFruitId\":\"$BunchId|s$\".*\"eventStatusCd\":\"(?<StatusCd>[^\"]+).*\"eventStatusMsg\":\"(?<statusMsg>[^\"]+).*\"eventType\":\"(?<eventType>[^\"]+).*\"eventTransactionHeaderId\":\"(?<TransactionHeaderId>[^\"]+)"
+| fields eventType,BunchId,statusMsg
 ] 
 
-[search index=my_org cf_space_name=my_space "VsdnCorelatedAlertResponseHandler" AND "CvdaLog" AND $deployBatchId|s$ AND $deployVin|s$ AND $deployFunctionId|s$ 
-| rex field=msg "eventVinRecord\":\"(?<Vin>[^\"]+).*\"eventVsdnBatchId\":\"$deployBatchId|s$\".*\"eventType\":\"(?<eventType>[^\"]+).*\"eventTransactionHeaderId\":\"(?<TransactionHeaderId>[^\"]+).*\"eventAdditionalInfo\":{.*\"avdStatus\":\[.*{\"functionId\":\"$deployFunctionId|s$\",\"dvdfunctionStatus\":(?<statusCd>[^,])"
+[search index=my_org cf_space_name=my_space "message1" AND "CustomLogMessage" AND $BunchId|s$ AND $Fruit|s$ AND $typeId|s$ 
+| rex field=msg "eventFruitRecord\":\"(?<Fruit>[^\"]+).*\"eventFruitId\":\"$BunchId|s$\".*\"eventType\":\"(?<eventType>[^\"]+).*\"eventAdditionalInfo\":{.*\"additionalStatus\":\[.*{\"typeId\":\"$typeId|s$\",\"typeStatus\":(?<statusCd>[^,])"
 | eval statusMsg = case(statusCd=="1","SUCCESS", statusCd == "0", "FAILED")]
-| eval vin = $deployVin|s$
-| eval functionId = $deployFunctionId|s$
-| eval BatchId = $deployBatchId|s$
-| dedup vin,functionId,eventType,BatchId,statusMsg
-| table vin,functionId,eventType,BatchId,statusMsg,_time
+| eval Fruit = $Fruit|s$
+| eval typeId = $typeId|s$
+| eval BunchId = $BunchId|s$
+| dedup Fruit,typeId,eventType,BunchId,statusMsg
+| table Fruit,typeId,eventType,BunchId,statusMsg,_time
 |sort -_time
 ```
 ##### MVEXPAND
 ```
-[search index=my_org cf_space_name=my_space "VsdnCorelatedAlertResponseHandler" AND "CvdaLog" AND $deployBatchId|s$ AND $deployVin|s$ AND $deployFunctionId|s$ 
-| rex field=msg "eventVinRecord\":\"(?<Vin>[^\"]+).*\"eventVsdnBatchId\":\"$deployBatchId|s$\".*\"eventType\":\"(?<eventType>[^\"]+).*\"eventTransactionHeaderId\":\"(?<TransactionHeaderId>[^\"]+).*\"eventAdditionalInfo\":{.*\"avdStatus\":\[.*{\"functionId\":\"$deployFunctionId|s$\",\"dvdfunctionStatus\":(?<statusCd>[^,])"
+[search index=my_org cf_space_name=my_space "VsdnCorelatedAlertResponseHandler" AND "CustomLogMessage" AND $BunchId|s$ AND $Fruit|s$ AND $typeId|s$ 
+| rex field=msg "eventFruitRecord\":\"(?<Fruit>[^\"]+).*\"eventFruitId\":\"$BunchId|s$\".*\"eventType\":\"(?<eventType>[^\"]+).*\"eventAdditionalInfo\":{.*\"additionalStatus\":\[.*{\"typeId\":\"$typeId|s$\",\"typeStatus\":(?<statusCd>[^,])"
 | eval statusMsg = case(statusCd=="1","SUCCESS", statusCd == "0", "FAILED")]
-| eval vin = $deployVin|s$
-| eval functionId = $deployFunctionId|s$
-| eval BatchId = $deployBatchId|s$
-| dedup vin,functionId,eventType,BatchId,statusMsg
-| table vin,functionId,eventType,BatchId,statusMsg,_time
+| eval Fruit = $Fruit|s$
+| eval typeId = $typeId|s$
+| eval BunchId = $BunchId|s$
+| dedup Fruit,typeId,eventType,BunchId,statusMsg
+| table Fruit,typeId,eventType,BunchId,statusMsg,_time
 |sort -_time
 ```
 
